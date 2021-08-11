@@ -6,8 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/bombamong/geo-cache/pkg/cache"
+	"github.com/bombamong/geo-cache/pkg/geofunc"
 	"github.com/bombamong/geo-cache/pkg/snowflake"
 
 	"github.com/gin-gonic/gin"
@@ -66,18 +68,34 @@ func main() {
 		Handler: r,
 	}
 
-	r.GET("/:merchant", func(c *gin.Context) {
-		p, ok := c.Params.Get("merchant")
-		var _ = p
+	r.POST("/data", func(c *gin.Context) {
 
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "bad request"})
-			return
+		type Request struct {
+			Distance float64 `json:"distance"`
+		}
+
+		req := new(Request)
+		c.BindJSON(req)
+
+		log.Println("request for a distance of: ", req.Distance)
+		lng, err := strconv.ParseFloat(c.Query("lng"), 64)
+		if err != nil {
+			log.Println(err.Error())
+		}
+
+		lat, err := strconv.ParseFloat(c.Query("lat"), 64)
+		if err != nil {
+			log.Println(err.Error())
 		}
 
 		cf := func(rd cache.RawData) bool {
-			return true
+			dist := geofunc.Haversine(lng, lat, rd.Longitude, rd.Latitude)
+			if dist <= req.Distance {
+				return true
+			}
+			return false
 		}
+
 		md := cash.Query(cf)
 		log.Println(md)
 		c.JSON(http.StatusOK, md)
