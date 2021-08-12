@@ -51,37 +51,36 @@ func Test_Geofuncs(t *testing.T) {
 			})
 		})
 
-		Convey("Should handle strange polygons", func() {
-			points := []*Point{
-				{Latitude: 1, Longitude: 2},
-				{Latitude: 2, Longitude: 1},
-				{Latitude: 0, Longitude: 0},
-				{Latitude: -2, Longitude: -2},
-				{Latitude: -2, Longitude: -2},
-				{Latitude: -2, Longitude: -2},
-				{Latitude: -2, Longitude: -2},
-				{Latitude: -2, Longitude: -2},
-			}
-
+		Convey("Should handle negatives", func() {
 			polygon := Polygon{
 				Vertices: []*Point{
-					{0, 0},
-					{10, 0},
-					{10, 10},
-					{0, 10},
+					{Longitude: 0, Latitude: 0},
+					{Longitude: -10, Latitude: 0},
+					{Longitude: -10, Latitude: -10},
+					{Longitude: 0, Latitude: -10},
 				},
 			}
-			contains := polygon.ContainsPoint(*points[0])
-			So(contains, ShouldBeTrue)
 
-			contains = polygon.ContainsPoint(*points[1])
+			p := Point{Longitude: -3, Latitude: -2}
+			contains := polygon.ContainsPoint(p)
 			So(contains, ShouldBeTrue)
+		})
 
-			contains = polygon.ContainsPoint(*points[2])
+		Convey("Should handle strange polygons", func() {
+			polygon := Polygon{
+				Vertices: []*Point{
+					{Longitude: 0, Latitude: 0},
+					{Longitude: -3, Latitude: -3},
+					{Longitude: -5, Latitude: -3},
+					{Longitude: -5, Latitude: 3},
+					{Longitude: -1, Latitude: -3},
+					{Longitude: 0, Latitude: 0},
+				},
+			}
+
+			p := Point{Longitude: -3, Latitude: -2}
+			contains := polygon.ContainsPoint(p)
 			So(contains, ShouldBeTrue)
-
-			contains = polygon.ContainsPoint(*points[3])
-			So(contains, ShouldBeFalse)
 		})
 
 	})
